@@ -1,0 +1,10 @@
+flask
+scikit-learn
+opencv-python
+numpy
+pillow
+joblib
+pymongo
+passlib        # kept for backward-compat migration of old password hashes
+reportlab      # PDF report generation
+wikipedia

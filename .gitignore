@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Trained ML model files (too large for GitHub; regenerate via train.py)
+models/
+*.joblib
+*.pkl
+*.h5
+
+# Large dataset directory (54,000 images - too large for GitHub free tier)
+dataset/
+images/
+static/captures/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / OS metadata
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
+
+# Generated test outputs & scratch files
+test_output.pdf
+scratch_inspect.py
