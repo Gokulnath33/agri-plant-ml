@@ -11,8 +11,9 @@ models/
 
 # Large dataset directory (54,000 images - too large for GitHub free tier)
 dataset/
-images/
-static/captures/
+/images/
+static/captures/*
+!static/captures/.gitkeep
 
 # Virtual environments
 venv/
