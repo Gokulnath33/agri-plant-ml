@@ -48,31 +48,33 @@
         .container { max-width: 1240px; margin: 0 auto; padding: 20px; }
         .hidden { display: none !important; }
 
-        /* Logged-In User Application View: Soft, attractive natural agro-ambient background (not dark) */
+        /* Logged-In User Application View: Attractive, rich, modern natural agro-ambient background (clearly visible, not plain white, not dark) */
+        body.logged-in-app,
         #app-section {
             min-height: 100vh;
-            background-color: #f1f7f3;
+            background-color: #dcfce7 !important;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.08) 0px, transparent 48%),
-                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 48%),
-                radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.06) 0px, transparent 48%),
-                radial-gradient(at 0% 100%, rgba(234, 179, 8, 0.05) 0px, transparent 48%),
-                linear-gradient(180deg, #ecfdf5 0%, #f6faf7 32%, #edf7ee 100%);
-            background-attachment: fixed;
+                radial-gradient(at 5% 5%, rgba(34, 197, 94, 0.28) 0px, transparent 45%),
+                radial-gradient(at 95% 8%, rgba(14, 165, 233, 0.24) 0px, transparent 45%),
+                radial-gradient(at 85% 90%, rgba(16, 185, 129, 0.28) 0px, transparent 45%),
+                radial-gradient(at 10% 92%, rgba(245, 158, 11, 0.18) 0px, transparent 45%),
+                radial-gradient(at 50% 50%, rgba(59, 130, 246, 0.10) 0px, transparent 55%),
+                linear-gradient(140deg, #dcfce7 0%, #e0f2fe 30%, #ecfdf5 65%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
             position: relative;
-            padding-bottom: 40px;
+            padding-bottom: 50px;
         }
 
         /* Top Header & Navigation */
         header.app-header {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(187, 247, 208, 0.65);
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 2px solid #86efac;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(22, 101, 52, 0.04);
+            box-shadow: 0 4px 24px rgba(22, 101, 52, 0.08);
         }
         .header-content {
             max-width: 1440px;
@@ -132,27 +134,28 @@
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
-            gap: 4px;
-            background: rgba(226, 232, 240, 0.7);
-            backdrop-filter: blur(8px);
-            padding: 4px;
-            border-radius: 10px;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(10px);
+            padding: 5px;
+            border-radius: 12px;
             overflow-x: auto;
             max-width: 100%;
             scrollbar-width: none;
             -ms-overflow-style: none;
             flex-shrink: 1;
-            border: 1px solid rgba(203, 213, 225, 0.6);
+            border: 1.5px solid rgba(134, 239, 172, 0.8);
+            box-shadow: 0 2px 10px rgba(22, 101, 52, 0.08);
         }
         .nav-tabs::-webkit-scrollbar { display: none; }
         .nav-tab {
             background: transparent;
             border: none;
-            padding: 7px 12px;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #64748b;
+            padding: 8px 14px;
+            border-radius: 9px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #475569;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -161,11 +164,14 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .nav-tab:hover { color: var(--primary); }
+        .nav-tab:hover {
+            color: #15803d;
+            background: rgba(220, 252, 231, 0.7);
+        }
         .nav-tab.active {
-            background: #ffffff;
-            color: var(--primary);
-            box-shadow: 0 2px 8px rgba(22, 101, 52, 0.12);
+            background: linear-gradient(135deg, #15803d, #16a34a) !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 12px rgba(22, 101, 52, 0.3) !important;
         }
 
         /* ===== LANDING PAGE STYLES ===== */
@@ -925,16 +931,18 @@
 
         /* Location Banner */
         .farmer-location-banner {
-            background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
-            border: 1px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff, #dcfce7);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 0.88rem;
-            color: #166534;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #14532d;
+            box-shadow: 0 4px 16px rgba(22, 101, 52, 0.08);
         }
 
         /* Dropzone Upload */
@@ -4113,6 +4121,7 @@
                 CURRENT_USER_PROFILE = {};
             }
 
+            document.body.classList.add('logged-in-app');
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
@@ -4217,6 +4226,7 @@
     // ===== LANDING PAGE NAVIGATION =====
     function showAuthPage() {
         showToast("Opening Farmer Sign In & Portal...", "info", "Farmer Portal", "🔑");
+        document.body.classList.remove('logged-in-app');
         document.getElementById('landing-page').classList.add('hidden');
         document.getElementById('app-section').classList.add('hidden');
         document.getElementById('auth-section').classList.remove('hidden');
@@ -4225,6 +4235,7 @@
 
     function showLandingPage() {
         showToast("Returned to Home Overview.", "info", "Home Overview", "🌿");
+        document.body.classList.remove('logged-in-app');
         document.getElementById('landing-page').classList.remove('hidden');
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('app-section').classList.add('hidden');
@@ -4424,6 +4435,7 @@
     }
 
     function openPesticidesFromLanding() {
+        document.body.classList.add('logged-in-app');
         document.getElementById('landing-page').classList.add('hidden');
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('app-section').classList.remove('hidden');
@@ -4464,6 +4476,7 @@
             sessionStorage.setItem('logged_in_profile', JSON.stringify(CURRENT_USER_PROFILE));
             sessionStorage.setItem('active_tab', 'scan');
 
+            document.body.classList.add('logged-in-app');
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
