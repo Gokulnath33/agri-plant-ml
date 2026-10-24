@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # ML model files — large ones excluded, small ones tracked
-models/rf.joblib
+# models/rf.joblib  # compressed via joblib zlib — now only ~4 MB, tracked
 *.pkl
 *.h5
 # Allow the small model files explicitly
