@@ -15,9 +15,11 @@ from sklearn.metrics import accuracy_score, classification_report
 # Configuration
 DATASET_DIR = "dataset"
 MODELS_DIR = "models"
-SAMPLES_PER_CLASS = 80
+SAMPLES_PER_CLASS = 200      # increased from 80 → 200 for better accuracy
+MIN_SAMPLES_PER_CLASS = 10   # skip folders with fewer than this many images
 PCA_COMPONENTS = 128
 RANDOM_STATE = 42
+JOBLIB_COMPRESS = ('zlib', 3)  # compress saved models (keeps files small for GitHub)
 
 def extract_image_features(img_bgr):
     """
@@ -54,20 +56,24 @@ def load_data(max_per_class=SAMPLES_PER_CLASS):
         print(f"Error: Directory '{DATASET_DIR}' does not exist.")
         return None, None, None
 
-    # Filter to only active directories with actual image files
+    valid_exts = ('.jpg', '.jpeg', '.png', '.bmp')
+
+    # Filter to only folders with at least MIN_SAMPLES_PER_CLASS real images
     class_names = sorted([
-        d for d in os.listdir(DATASET_DIR) 
-        if os.path.isdir(os.path.join(DATASET_DIR, d)) 
-        and len(os.listdir(os.path.join(DATASET_DIR, d))) > 0
+        d for d in os.listdir(DATASET_DIR)
+        if os.path.isdir(os.path.join(DATASET_DIR, d))
+        and len([
+            f for f in os.listdir(os.path.join(DATASET_DIR, d))
+            if f.lower().endswith(valid_exts)
+        ]) >= MIN_SAMPLES_PER_CLASS
     ])
-    
+
     if len(class_names) == 0:
         print(f"Warning: No valid class folders found in '{DATASET_DIR}'.")
         return None, None, None
 
-    print(f"Found {len(class_names)} active pathology classes. Loading balanced subset (max {max_per_class} per class)...")
+    print(f"Found {len(class_names)} active pathology classes (>={MIN_SAMPLES_PER_CLASS} images each). Loading balanced subset (max {max_per_class} per class)...")
     t0 = time.time()
-    valid_exts = ('.jpg', '.jpeg', '.png', '.bmp')
 
     for idx, class_name in enumerate(class_names):
         classes[idx] = class_name
@@ -116,8 +122,8 @@ def train_all_models():
 
     # Ensure models directory exists
     os.makedirs(MODELS_DIR, exist_ok=True)
-    joblib.dump(pca, os.path.join(MODELS_DIR, 'pca.joblib'))
-    joblib.dump(classes, os.path.join(MODELS_DIR, 'classes.joblib'))
+    joblib.dump(pca, os.path.join(MODELS_DIR, 'pca.joblib'), compress=JOBLIB_COMPRESS)
+    joblib.dump(classes, os.path.join(MODELS_DIR, 'classes.joblib'), compress=JOBLIB_COMPRESS)
     print(f"   Saved 'pca.joblib' and 'classes.joblib' to '{MODELS_DIR}/'")
 
     # 2. Train Calibrated Support Vector Machine (SVM)
@@ -128,7 +134,7 @@ def train_all_models():
     svm.fit(X_train_pca, y_train)
     svm_acc = accuracy_score(y_test, svm.predict(X_test_pca))
     print(f"   SVM Training Time: {time.time()-t_svm:.2f}s | Test Accuracy: {svm_acc:.2%}")
-    joblib.dump(svm, os.path.join(MODELS_DIR, 'svm.joblib'))
+    joblib.dump(svm, os.path.join(MODELS_DIR, 'svm.joblib'), compress=JOBLIB_COMPRESS)
     print(f"   Saved 'svm.joblib' to '{MODELS_DIR}/'")
 
     # 3. Train Multilayer Perceptron (MLP) Neural Network
@@ -148,7 +154,7 @@ def train_all_models():
     mlp.fit(X_train_pca, y_train)
     mlp_acc = accuracy_score(y_test, mlp.predict(X_test_pca))
     print(f"   MLP Training Time: {time.time()-t_mlp:.2f}s | Test Accuracy: {mlp_acc:.2%}")
-    joblib.dump(mlp, os.path.join(MODELS_DIR, 'mlp.joblib'))
+    joblib.dump(mlp, os.path.join(MODELS_DIR, 'mlp.joblib'), compress=JOBLIB_COMPRESS)
     print(f"   Saved 'mlp.joblib' to '{MODELS_DIR}/'")
 
     # 4. Train K-Nearest Neighbors (KNN)
@@ -158,7 +164,7 @@ def train_all_models():
     knn.fit(X_train_pca, y_train)
     knn_acc = accuracy_score(y_test, knn.predict(X_test_pca))
     print(f"   KNN Training Time: {time.time()-t_knn:.2f}s | Test Accuracy: {knn_acc:.2%}")
-    joblib.dump(knn, os.path.join(MODELS_DIR, 'knn.joblib'))
+    joblib.dump(knn, os.path.join(MODELS_DIR, 'knn.joblib'), compress=JOBLIB_COMPRESS)
     print(f"   Saved 'knn.joblib' to '{MODELS_DIR}/'")
 
     # 5. Train Random Forest (RF)
@@ -168,7 +174,7 @@ def train_all_models():
     rf.fit(X_train_pca, y_train)
     rf_acc = accuracy_score(y_test, rf.predict(X_test_pca))
     print(f"   Random Forest Training Time: {time.time()-t_rf:.2f}s | Test Accuracy: {rf_acc:.2%}")
-    joblib.dump(rf, os.path.join(MODELS_DIR, 'rf.joblib'))
+    joblib.dump(rf, os.path.join(MODELS_DIR, 'rf.joblib'), compress=JOBLIB_COMPRESS)
     print(f"   Saved 'rf.joblib' to '{MODELS_DIR}/'")
 
     print("\n" + "=" * 60)
