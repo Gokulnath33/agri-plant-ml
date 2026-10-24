@@ -8,3 +8,4 @@ pymongo
 passlib        # kept for backward-compat migration of old password hashes
 reportlab      # PDF report generation
 wikipedia
+gunicorn
