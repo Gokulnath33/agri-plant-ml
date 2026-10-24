@@ -3,11 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Trained ML model files (too large for GitHub; regenerate via train.py)
-models/
-*.joblib
+# ML model files — large ones excluded, small ones tracked
+models/rf.joblib
 *.pkl
 *.h5
+# Allow the small model files explicitly
+!models/pca.joblib
+!models/knn.joblib
+!models/mlp.joblib
+!models/svm.joblib
+!models/classes.joblib
 
 # Large dataset directory (54,000 images - too large for GitHub free tier)
 dataset/
