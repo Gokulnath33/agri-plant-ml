@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automated Site-Specific Pesticide Application — Smart Plant Pathology & Analytics</title>
+    <!-- Project Favicon & Branding Icons -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="theme-color" content="#14532d">
     <!-- Google Fonts & Chart.js -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2042,7 +2048,7 @@
     <nav class="landing-navbar" id="landing-nav">
         <div class="landing-navbar-inner">
             <a href="#" class="landing-logo" onclick="scrollToSection('hero'); return false;">
-                <div class="landing-logo-icon">🌿</div>
+                <div class="landing-logo-icon"><img src="{{ url_for('static', filename='favicon.svg') }}" alt="Agri-Plant Icon" style="width: 28px; height: 28px; display: block;"></div>
                 <div class="landing-logo-text-group">
                     <span class="landing-logo-text" data-i18n="app_title">Automated Site-Specific Pesticide Application</span>
                     <span class="landing-logo-sub">Smart Botanical Pathology & Precision Advisory</span>
@@ -2538,7 +2544,7 @@
     <header class="app-header">
         <div class="header-content">
             <div class="logo-group" style="cursor: pointer;" onclick="showLandingPage()" title="Return to Home Overview">
-                <div class="logo-icon">🌿</div>
+                <div class="logo-icon"><img src="{{ url_for('static', filename='favicon.svg') }}" alt="Agri-Plant Icon" style="width: 28px; height: 28px; display: block;"></div>
                 <div class="logo-title">
                     <h1 data-i18n="app_title">Automated Site-Specific Pesticide Application</h1>
                     <p>PRECISION BOTANICAL PATHOLOGY ENGINE</p>

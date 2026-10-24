@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a2f14"/>
+      <stop offset="50%" stop-color="#14532d"/>
+      <stop offset="100%" stop-color="#166534"/>
+    </linearGradient>
+
+    <!-- Leaf Main Gradient -->
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86efac"/>
+      <stop offset="40%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+
+    <!-- Droplet / Precision Target Gradient -->
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Golden Sensor Accent -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Shield / Badge -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" stroke="#22c55e" stroke-width="6" stroke-opacity="0.4"/>
+
+  <!-- Subtle Precision Target Grid / Concentric Scan Arc -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#86efac" stroke-width="3" stroke-dasharray="12 12" stroke-opacity="0.2"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#86efac" stroke-width="2" stroke-opacity="0.25"/>
+
+  <!-- Organic Plant Leaf (Left - Main) -->
+  <path d="M256,410 C210,380 120,320 120,200 C120,110 210,70 256,60 C256,60 256,410 256,410 Z" 
+        fill="url(#leafGrad)" />
+
+  <!-- Organic Plant Leaf (Right - Secondary with Transparency for 3D depth) -->
+  <path d="M256,410 C302,380 392,320 392,200 C392,110 302,70 256,60 C256,60 256,410 256,410 Z" 
+        fill="url(#leafGrad)" fill-opacity="0.82" />
+
+  <!-- Central Leaf Stem Line -->
+  <path d="M256,70 L256,420" stroke="#0a2f14" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
+
+  <!-- Leaf Vein Accents -->
+  <path d="M256,160 C220,175 180,185 160,205" stroke="#86efac" stroke-width="4" stroke-linecap="round" stroke-opacity="0.7" fill="none"/>
+  <path d="M256,230 C215,250 180,265 155,295" stroke="#86efac" stroke-width="4" stroke-linecap="round" stroke-opacity="0.7" fill="none"/>
+  <path d="M256,160 C292,175 332,185 352,205" stroke="#bbf7d0" stroke-width="4" stroke-linecap="round" stroke-opacity="0.6" fill="none"/>
+  <path d="M256,230 C297,250 332,265 357,295" stroke="#bbf7d0" stroke-width="4" stroke-linecap="round" stroke-opacity="0.6" fill="none"/>
+
+  <!-- Precision Pesticide Droplet Overlay (Center-Right Symbolizing Targeted Application) -->
+  <g filter="url(#glow)">
+    <path d="M256,170 C256,170 330,260 330,305 C330,346 297,380 256,380 C215,380 182,346 182,305 C182,260 256,170 256,170 Z" 
+          fill="url(#dropGrad)" />
+    <!-- Droplet Glint -->
+    <ellipse cx="236" cy="285" rx="14" ry="26" transform="rotate(-25 236 285)" fill="#ffffff" fill-opacity="0.7"/>
+  </g>
+
+  <!-- Site-Specific AI Crosshair Reticle -->
+  <circle cx="256" cy="305" r="52" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" stroke-dasharray="8 6"/>
+  <circle cx="256" cy="305" r="8" fill="#fde047" />
+  <line x1="256" y1="235" x2="256" y2="247" stroke="#fde047" stroke-width="4" stroke-linecap="round"/>
+  <line x1="256" y1="363" x2="256" y2="375" stroke="#fde047" stroke-width="4" stroke-linecap="round"/>
+  <line x1="186" y1="305" x2="198" y2="305" stroke="#fde047" stroke-width="4" stroke-linecap="round"/>
+  <line x1="314" y1="305" x2="326" y2="305" stroke="#fde047" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Smart Diagnostic Micro-nodes (Precision Tech Indicators) -->
+  <circle cx="145" cy="150" r="9" fill="url(#accentGrad)" filter="url(#glow)"/>
+  <circle cx="365" cy="145" r="8" fill="#38bdf8" filter="url(#glow)"/>
+  <circle cx="385" cy="370" r="7" fill="#4ade80" />
+</svg>

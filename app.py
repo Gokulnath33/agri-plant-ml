@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import joblib
 from collections import Counter
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, send_from_directory
 from PIL import Image
 import io
 import sys
@@ -154,6 +154,11 @@ def predict_with_all_models(cv_img):
     }
 
     return all_results, winning_class, consensus_info
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/')
