@@ -15,7 +15,7 @@ from sklearn.metrics import accuracy_score, classification_report
 # Configuration
 DATASET_DIR = "dataset"
 MODELS_DIR = "models"
-SAMPLES_PER_CLASS = 200      # increased from 80 → 200 for better accuracy
+SAMPLES_PER_CLASS = 120      # balanced across all 79 active crop & pathology classes
 MIN_SAMPLES_PER_CLASS = 10   # skip folders with fewer than this many images
 PCA_COMPONENTS = 128
 RANDOM_STATE = 42
