@@ -25,20 +25,34 @@ _db_instance = None
 
 def _get_db():
     global _client, _db_instance
+
     if _db_instance is None:
         try:
-            _client = MongoClient(
-                "mongodb://localhost:27017/",
-                serverSelectionTimeoutMS=3000,  # fail fast if mongo is down
-                connectTimeoutMS=3000,
-                socketTimeoutMS=5000,
-                maxPoolSize=20,           # up to 20 reused sockets
-                minPoolSize=2,            # keep 2 warm connections always
+            mongo_uri = os.environ.get(
+                "MONGODB_URI",
+                "mongodb://localhost:27017/"
             )
+
+            _client = MongoClient(
+                mongo_uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=10000,
+                maxPoolSize=20,
+            )
+
             _db_instance = _client["pesticide_app_db"]
+
+            # Check that the database connection works
+            _client.admin.command("ping")
+            print("[DB] MongoDB connection successful")
+
         except Exception as e:
             print(f"[DB] Connection error: {e}")
+            _client = None
+            _db_instance = None
             return None
+
     return _db_instance
 
 
