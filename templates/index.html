@@ -4014,73 +4014,97 @@
         }
     }
 
+    function saveCurrentViewContext(langCode) {
+        try {
+            if (langCode) {
+                localStorage.setItem('user_preferred_language', langCode);
+            }
+            const authSec = document.getElementById('auth-section');
+            const appSec = document.getElementById('app-section');
+            const isAuthVisible = authSec && !authSec.classList.contains('hidden');
+            const isAppVisible = appSec && !appSec.classList.contains('hidden');
+
+            if (isAuthVisible) {
+                sessionStorage.setItem('active_view', 'auth');
+                const regForm = document.getElementById('form-register');
+                const isReg = regForm && !regForm.classList.contains('hidden');
+                const forgotForm = document.getElementById('form-forgot');
+                const isForgot = forgotForm && !forgotForm.classList.contains('hidden');
+                sessionStorage.setItem('auth_mode', isForgot ? 'forgot' : (isReg ? 'register' : 'signin'));
+            } else if (isAppVisible) {
+                sessionStorage.setItem('active_view', 'app');
+                const activeTab = document.querySelector('.nav-tab.active')?.id?.replace('tab-btn-', '') || 'scan';
+                sessionStorage.setItem('active_tab', activeTab);
+                if (!CURRENT_USER) {
+                    sessionStorage.setItem('guest_pesticides_active', '1');
+                } else {
+                    sessionStorage.removeItem('guest_pesticides_active');
+                }
+            } else {
+                sessionStorage.setItem('active_view', 'landing');
+                sessionStorage.removeItem('guest_pesticides_active');
+            }
+
+            if (CURRENT_USER) {
+                sessionStorage.setItem('logged_in_user', CURRENT_USER);
+                if (CURRENT_USER_PROFILE) {
+                    if (langCode) CURRENT_USER_PROFILE.language = langCode;
+                    sessionStorage.setItem('logged_in_profile', JSON.stringify(CURRENT_USER_PROFILE));
+                }
+            }
+        } catch(e) {
+            console.warn('Could not save view context:', e);
+        }
+    }
+
     function setGoogleTranslateCookie(langCode) {
         try {
             const host = window.location.hostname;
+            const past = 'Thu, 01 Jan 1970 00:00:00 UTC';
             const expiry = new Date(Date.now() + 365 * 864e5).toUTCString();
-            const base = `googtrans=/en/${langCode}; path=/; expires=${expiry}`;
-            document.cookie = base;
+
+            // Clear previous cookies across domain levels
+            document.cookie = `googtrans=; path=/; expires=${past}`;
             if (host && host !== 'localhost') {
-                document.cookie = base + `; domain=${host}`;
-                document.cookie = base + `; domain=.${host}`;
+                document.cookie = `googtrans=; path=/; domain=${host}; expires=${past}`;
+                document.cookie = `googtrans=; path=/; domain=.${host}; expires=${past}`;
+            }
+
+            // Set new cookie if not English
+            if (langCode && langCode !== 'en') {
+                const base = `googtrans=/en/${langCode}; path=/; expires=${expiry}`;
+                document.cookie = base;
+                if (host && host !== 'localhost') {
+                    document.cookie = base + `; domain=${host}`;
+                    document.cookie = base + `; domain=.${host}`;
+                }
             }
         } catch(e) {
             console.warn("Could not set translate cookie", e);
         }
     }
 
-    // ── Core reliable Google Translate trigger ──────────────────────────────
-    // Strategy: set the cookie, then try (a) the combo widget,
-    // (b) reload the hidden GT iframe with a fresh src so it picks up the
-    // new cookie immediately — no page refresh needed.
     function triggerGoogleTranslate(langCode) {
-        if (!langCode || langCode === 'en') {
-            // Restore to English: clear the cookie and reload iframe
-            document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-            _reloadGoogleTranslateFrame('en');
-            return true;
-        }
+        if (!langCode) return false;
         setGoogleTranslateCookie(langCode);
 
-        // (a) Try the combo widget (works when GT widget is fully loaded)
         const combo = document.querySelector('.goog-te-combo');
         if (combo) {
-            combo.value = langCode;
-            combo.dispatchEvent(new Event('change'));
+            const targetVal = (langCode === 'en') ? 'en' : langCode;
+            if (combo.value !== targetVal) {
+                combo.value = targetVal;
+                combo.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof combo.onchange === 'function') {
+                    combo.onchange();
+                }
+            }
+            return true;
         }
-
-        // (b) Force the hidden iframe to reload — picks up the new cookie
-        // This is the reliable path that works without a page refresh.
-        _reloadGoogleTranslateFrame(langCode);
-        return true;
+        return false;
     }
 
-    function _reloadGoogleTranslateFrame(langCode) {
-        try {
-            const frame = document.querySelector('iframe.goog-te-banner-frame, iframe[src*="translate.google"]');
-            if (frame) {
-                const src = frame.src;
-                frame.src = '';
-                frame.src = src;
-                return;
-            }
-            // If the iframe isn't rendered yet, nudge the hidden widget div
-            // by reinitializing the GT element so it picks up the new cookie.
-            const el = document.getElementById('google_translate_hidden_element');
-            if (el && window.google && window.google.translate) {
-                el.innerHTML = '';
-                new window.google.translate.TranslateElement(
-                    { pageLanguage: 'en', autoDisplay: false,
-                      layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE },
-                    'google_translate_hidden_element'
-                );
-            }
-        } catch(e) {
-            console.warn('GT iframe reload failed:', e);
-        }
-    }
-
-    function changeAppLanguage(langCode, notifyUser = true) {
+    // Automatically convert whole page when any language is selected
+    function changeAppLanguage(langCode, isUserTriggered = true) {
         if (!langCode) return;
 
         // 1. Synchronize all language selectors in DOM immediately
@@ -4088,10 +4112,10 @@
             if (sel.value !== langCode) sel.value = langCode;
         });
 
-        // 2. Persist in browser storage
-        localStorage.setItem('user_preferred_language', langCode);
+        // 2. Persist in storage and save current view state (auth/login vs landing vs app)
+        saveCurrentViewContext(langCode);
 
-        // 3. Persist to MongoDB for active logged-in user (fire-and-forget)
+        // 3. Persist to MongoDB for active logged-in user
         if (CURRENT_USER) {
             fetch('/api/user/language', {
                 method: 'POST',
@@ -4101,94 +4125,45 @@
             if (CURRENT_USER_PROFILE) CURRENT_USER_PROFILE.language = langCode;
         }
 
-        // 4. Force Google Translate cookie across all paths
+        // 4. Force Google Translate cookie across all domain levels
         setGoogleTranslateCookie(langCode);
 
-        // 5. Apply built-in data-i18n translations INSTANTLY (no network needed)
+        // 5. Apply built-in data-i18n translations immediately
         applyLanguagePackageToPage(langCode);
 
-        // 6. Trigger Google Translate for any remaining non-i18n text
-        triggerGoogleTranslate(langCode);
-        setTimeout(() => triggerGoogleTranslate(langCode), 600);
-
-        // 7. Highlight / pulse all Refresh buttons across header & landing
-        document.querySelectorAll('.btn-refresh-lang').forEach(btn => {
-            btn.classList.add('refresh-pulse');
-            setTimeout(() => btn.classList.remove('refresh-pulse'), 3500);
-        });
-
-        // 8. Inform user to click Refresh for complete translation
-        if (notifyUser) {
-            const displayName = LANGUAGE_NAMES[langCode] || langCode;
-            showToast(`Language set to ${displayName}. Click 🔄 Refresh to translate the entire page.`, 'info', 'Language Selected', '🌐', 3500);
+        // 6. On initial load, only trigger combo without reloading
+        if (!isUserTriggered) {
+            triggerGoogleTranslate(langCode);
+            return;
         }
+
+        // 7. For user-initiated selection, try live translation first
+        triggerGoogleTranslate(langCode);
+        const displayName = LANGUAGE_NAMES[langCode] || langCode;
+
+        // 8. Automatically convert whole page without requiring the user to click Refresh!
+        showToast(`Converting page to ${displayName}...`, 'info', 'Converting Language', '🌐', 1800);
+        setTimeout(() => {
+            window.location.reload();
+        }, 150);
     }
 
-    // Refresh and Convert Whole Page in Chosen Language (Inside & Outside Login)
+    // Manual Refresh fallback (delegates automatically to changeAppLanguage)
     function refreshAndApplyLanguage() {
-        // Spin all refresh icons
-        document.querySelectorAll('.btn-refresh-lang .refresh-spin').forEach(icon => {
-            icon.classList.add('spin-active');
-        });
-
-        let targetLang = 'ta';
+        let targetLang = localStorage.getItem('user_preferred_language') || 'ta';
         const selectors = [
             document.getElementById('header_language_select'),
             document.getElementById('landing_language_select'),
             document.getElementById('login_language'),
             document.getElementById('reg_language')
         ];
-
         for (const sel of selectors) {
             if (sel && sel.value) {
                 targetLang = sel.value;
                 break;
             }
         }
-
-        // 1. Sync all selectors across the page
-        document.querySelectorAll('.app-language-selector').forEach(sel => {
-            if (sel) sel.value = targetLang;
-        });
-
-        // 2. Persist in storage
-        localStorage.setItem('user_preferred_language', targetLang);
-
-        // 3. Persist session state across page reload
-        if (CURRENT_USER) {
-            sessionStorage.setItem('logged_in_user', CURRENT_USER);
-            if (CURRENT_USER_PROFILE) {
-                CURRENT_USER_PROFILE.language = targetLang;
-                sessionStorage.setItem('logged_in_profile', JSON.stringify(CURRENT_USER_PROFILE));
-            }
-            const activeTab = document.querySelector('.nav-tab.active')?.id?.replace('tab-btn-', '') || 'scan';
-            sessionStorage.setItem('active_tab', activeTab);
-        } else {
-            // Check if viewing pesticides tab as guest
-            const appSec = document.getElementById('app-section');
-            if (appSec && !appSec.classList.contains('hidden')) {
-                sessionStorage.setItem('guest_pesticides_active', '1');
-            } else {
-                sessionStorage.removeItem('guest_pesticides_active');
-            }
-        }
-
-        // 4. Force Google Translate cookie across all domain levels
-        setGoogleTranslateCookie(targetLang);
-
-        // 5. Trigger client dictionary translations
-        try {
-            applyLanguagePackageToPage(targetLang);
-            triggerGoogleTranslate(targetLang);
-        } catch(e) {}
-
-        const langName = LANGUAGE_NAMES[targetLang] || targetLang.toUpperCase();
-        showToast(`Refreshing page to apply ${langName} translation...`, 'info', 'Refreshing', '🔄');
-
-        // 6. Reload so Google Translate processes the complete DOM
-        setTimeout(() => {
-            window.location.reload();
-        }, 250);
+        changeAppLanguage(targetLang, true);
     }
 
     // UI updater for Authenticated Farmer vs Guest mode
@@ -4269,6 +4244,20 @@
             return true;
         } else {
             updateAuthHeaderUI();
+
+            // Check if user was viewing auth / login screen before language change
+            const savedView = sessionStorage.getItem('active_view');
+            if (savedView === 'auth') {
+                document.body.classList.remove('logged-in-app');
+                document.getElementById('landing-page').classList.add('hidden');
+                document.getElementById('app-section').classList.add('hidden');
+                document.getElementById('auth-section').classList.remove('hidden');
+                const savedMode = sessionStorage.getItem('auth_mode') || 'signin';
+                setAuthMode(savedMode);
+                window.scrollTo(0, 0);
+                return true;
+            }
+
             // Restore guest viewing pesticide directory if was active before refresh
             if (sessionStorage.getItem('guest_pesticides_active') === '1') {
                 sessionStorage.removeItem('guest_pesticides_active');
@@ -5798,7 +5787,7 @@
 </script>
 
 <!-- Google Translate Hidden Support for Dynamic Whole-App Translation -->
-<div id="google_translate_hidden_element" style="display:none;"></div>
+<div id="google_translate_hidden_element" style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;"></div>
 <script type="text/javascript">
 function googleTranslateElementInit() {
     new google.translate.TranslateElement({
