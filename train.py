@@ -169,9 +169,8 @@ def train_all_models():
 
     # 5. Train Random Forest (RF)
     print("\n5. Training Random Forest Classifier...")
-    t_rf = time.time()
-    rf = RandomForestClassifier(n_estimators=100, max_depth=20, random_state=RANDOM_STATE)
-    rf.fit(X_train_pca, y_train)
+    # 20 estimators ensures memory stays well under 512MB RAM on cloud platforms like Render
+    rf = RandomForestClassifier(n_estimators=20, max_depth=20, random_state=RANDOM_STATE)
     rf_acc = accuracy_score(y_test, rf.predict(X_test_pca))
     print(f"   Random Forest Training Time: {time.time()-t_rf:.2f}s | Test Accuracy: {rf_acc:.2%}")
     joblib.dump(rf, os.path.join(MODELS_DIR, 'rf.joblib'), compress=JOBLIB_COMPRESS)

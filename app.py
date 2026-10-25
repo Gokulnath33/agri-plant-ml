@@ -1,5 +1,6 @@
 import os
 import time
+import threading
 import numpy as np
 import cv2
 import joblib
@@ -18,7 +19,7 @@ from treatment_protocols import get_comprehensive_treatment_protocol
 from disease_formatter import format_disease_prediction
 from agri_bot import get_agri_bot_response
 from agri_pesticides_db import get_crop_agronomy, EXPANDED_PLANT_AGRONOMY, PESTICIDE_CATEGORIES, PESTICIDES_CATALOG
-from report_generator import build_diagnostic_pdf_bytes
+# Note: report_generator is lazy-imported inside generate_report_pdf to avoid Matplotlib startup memory and font caching
 
 try:
     from auto_plant_scanner import run_pipeline_and_predict as run_dl_pipeline
@@ -29,24 +30,40 @@ except Exception as e:
 app = Flask(__name__)
 db.ensure_admin_exists()
 
-# --- MODEL LOADING LOGIC ---
+# --- MODEL LOADING LOGIC (Lazy loaded on demand to prevent startup OOM) ---
 MODELS_DIR = "models"
 
-def load_trained_models():
-    try:
-        pca = joblib.load(os.path.join(MODELS_DIR, 'pca.joblib'))
-        svm = joblib.load(os.path.join(MODELS_DIR, 'svm.joblib'))
-        mlp = joblib.load(os.path.join(MODELS_DIR, 'mlp.joblib'))
-        knn = joblib.load(os.path.join(MODELS_DIR, 'knn.joblib'))
-        rf = joblib.load(os.path.join(MODELS_DIR, 'rf.joblib'))
-        classes = joblib.load(os.path.join(MODELS_DIR, 'classes.joblib'))
-        print(f"[*] Successfully loaded all 5 ML models and {len(classes)} classes from '{MODELS_DIR}/'.")
-        return pca, svm, mlp, knn, rf, classes
-    except Exception as e:
-        print(f"[!] Warning: Could not load trained models from '{MODELS_DIR}/': {e}")
-        return None, None, None, None, None, None
+_models_loaded = False
+_model_load_lock = threading.Lock()
+pca_model = None
+svm_model = None
+mlp_model = None
+knn_model = None
+rf_model = None
+class_dict = None
 
-pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict = load_trained_models()
+def get_models():
+    """Thread-safe lazy-loading of machine learning models on first prediction request instead of at startup."""
+    global _models_loaded, pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict
+    if not _models_loaded:
+        with _model_load_lock:
+            if not _models_loaded:
+                try:
+                    print(f"[*] On-demand loading of ML models from '{MODELS_DIR}/'...")
+                    pca_model = joblib.load(os.path.join(MODELS_DIR, 'pca.joblib'))
+                    svm_model = joblib.load(os.path.join(MODELS_DIR, 'svm.joblib'))
+                    mlp_model = joblib.load(os.path.join(MODELS_DIR, 'mlp.joblib'))
+                    knn_model = joblib.load(os.path.join(MODELS_DIR, 'knn.joblib'))
+                    rf_model = joblib.load(os.path.join(MODELS_DIR, 'rf.joblib'))
+                    class_dict = joblib.load(os.path.join(MODELS_DIR, 'classes.joblib'))
+                    import gc
+                    gc.collect()
+                    _models_loaded = True
+                    print(f"[*] Successfully loaded all 5 ML models and {len(class_dict)} classes from '{MODELS_DIR}/'.")
+                except Exception as e:
+                    print(f"[!] Warning: Could not load trained models from '{MODELS_DIR}/': {e}")
+                    pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict = None, None, None, None, None, None
+    return pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict
 
 PLANT_STATISTICS = EXPANDED_PLANT_AGRONOMY
 
@@ -59,7 +76,8 @@ def predict_with_all_models(cv_img):
     4. K-Nearest Neighbors (KNN)
     Returns: list of results, top-3 candidates, consensus info.
     """
-    if pca_model is None or class_dict is None:
+    pca, svm, mlp, knn, rf, classes = get_models()
+    if pca is None or classes is None:
         return None, None, None
 
     # Feature extraction (4096-dim vector)
@@ -68,13 +86,13 @@ def predict_with_all_models(cv_img):
         return None, None, None
 
     # PCA transformation (128 principal components)
-    feat_pca = pca_model.transform(features.reshape(1, -1))
+    feat_pca = pca.transform(features.reshape(1, -1))
 
     model_suite = [
-        ("Calibrated SVM (RBF Kernel)", svm_model),
-        ("Multilayer Perceptron (MLP Neural Net)", mlp_model),
-        ("Random Forest Classifier (RF)", rf_model),
-        ("K-Nearest Neighbors (KNN)", knn_model)
+        ("Calibrated SVM (RBF Kernel)", svm),
+        ("Multilayer Perceptron (MLP Neural Net)", mlp),
+        ("Random Forest Classifier (RF)", rf),
+        ("K-Nearest Neighbors (KNN)", knn)
     ]
 
     all_results = []
@@ -785,6 +803,7 @@ def generate_report_pdf():
         if not data or not data.get('pathology'):
             return jsonify({"success": False, "message": "Valid diagnostic data required."}), 400
 
+        from report_generator import build_diagnostic_pdf_bytes
         pdf_bytes = build_diagnostic_pdf_bytes(data)
         crop_name = (data.get('pathology', {}).get('crop') or data.get('plant_type') or 'Crop').replace(' ', '_')
         dis_name = (data.get('pathology', {}).get('disease_name') or 'Scan').replace(' ', '_')

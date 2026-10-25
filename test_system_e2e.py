@@ -68,7 +68,8 @@ except Exception as e:
 # TEST 3: Multi-Model Inference & Consensus
 # ---------------------------------------------------------
 try:
-    from app import predict_with_all_models, pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict
+    from app import predict_with_all_models, get_models
+    pca_model, svm_model, mlp_model, knn_model, rf_model, class_dict = get_models()
     
     if None in (pca_model, svm_model, mlp_model, knn_model, class_dict):
         record("Model Loading", False, "One or more core ML models failed to load into memory.")
